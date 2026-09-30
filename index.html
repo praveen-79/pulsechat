@@ -531,8 +531,12 @@
                 };
 
                 saveAccount(newAccount);
-                alert(`✅ Account "${username}" created successfully!\n\nEntering chatroom now...`);
-                completeLogin(newAccount);
+                alert(`✅ Account "${username}" created successfully!\n\nPlease enter your password on the Log In tab to sign in.`);
+                setAuthTab('login');
+                DOM.loginUsername.value = username;
+                DOM.loginPassword.value = '';
+                DOM.loginPassword.focus();
+                showNotice(`Account "${username}" created! Enter your password to sign in.`, 'success');
             }
 
             // Bind Sign Up to button click, form submit, and Enter key
@@ -633,18 +637,10 @@
                 }
             });
 
-            // Check if existing session active
-            const savedSession = sessionStorage.getItem('praveenchat_session');
-            if (savedSession) {
-                try {
-                    const user = JSON.parse(savedSession);
-                    completeLogin(user);
-                } catch(e) {
-                    DOM.authModal.classList.remove('hidden');
-                }
-            } else {
-                DOM.authModal.classList.remove('hidden');
-            }
+            // Always require explicit ID and password login on page load/reload
+            sessionStorage.removeItem('praveenchat_session');
+            DOM.authModal.classList.remove('hidden');
+            setAuthTab('login');
 
             // Networking: MQTT Cloud WebSocket Broker + BroadcastChannel Hybrid
             function initNetworking() {
