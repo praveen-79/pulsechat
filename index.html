@@ -122,14 +122,33 @@
         .emoji-item { background: none; border: none; font-size: 18px; cursor: pointer; padding: 4px; border-radius: 4px; }
         .emoji-item:hover { background: var(--bg-tertiary); }
 
-        /* Login Modal */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 100; }
+        /* Auth Modal & Tabs */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 100; }
         .modal.hidden { display: none; }
-        .modal-box { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; width: 400px; padding: 28px; text-align: center; }
-        .modal-box h2 { font-size: 21px; font-weight: 800; margin-bottom: 6px; }
-        .modal-box p { font-size: 12.5px; color: var(--text-muted); margin-bottom: 20px; }
-        .modal-box input { width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 8px; color: var(--text-primary); font-size: 14px; margin-bottom: 16px; outline: none; }
-        .btn-block { width: 100%; padding: 11px; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; font-size: 14px; }
+        .modal-box { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 14px; width: 420px; padding: 26px 28px; text-align: left; box-shadow: 0 12px 36px rgba(0,0,0,0.6); }
+        .modal-header { text-align: center; margin-bottom: 18px; }
+        .modal-header h2 { font-size: 22px; font-weight: 800; }
+        .modal-header p { font-size: 12.5px; color: var(--text-muted); margin-top: 4px; }
+        .auth-tabs { display: flex; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 3px; margin-bottom: 18px; }
+        .auth-tab { flex: 1; padding: 8px; text-align: center; font-size: 13px; font-weight: 700; color: var(--text-secondary); cursor: pointer; border-radius: 6px; border: none; background: none; transition: 0.15s; }
+        .auth-tab.active { background: var(--accent-blue); color: white; }
+        .auth-pane { display: none; }
+        .auth-pane.active { display: block; }
+        .form-group { margin-bottom: 13px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; }
+        .form-group input { width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); padding: 9px 12px; border-radius: 8px; color: var(--text-primary); font-size: 13.5px; outline: none; transition: border-color 0.2s; }
+        .form-group input:focus { border-color: var(--accent-blue); }
+        .color-palette { display: flex; gap: 8px; margin-top: 4px; }
+        .color-dot { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.15s; }
+        .color-dot.active { border-color: white; transform: scale(1.15); box-shadow: 0 0 8px rgba(255,255,255,0.4); }
+        .auth-notice { font-size: 12px; padding: 8px 12px; border-radius: 6px; margin-bottom: 14px; display: none; }
+        .auth-notice.error { display: block; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; }
+        .auth-notice.success { display: block; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399; }
+        .btn-auth-switch { background: none; border: none; color: var(--accent-blue); font-size: 12px; cursor: pointer; display: block; margin: 12px auto 0; text-align: center; text-decoration: underline; }
+        .btn-auth-switch:hover { color: #93c5fd; }
+        .btn-logout { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; padding: 4px; border-radius: 4px; transition: color 0.15s; margin-left: auto; }
+        .btn-logout:hover { color: #f87171; }
+        .btn-block { width: 100%; padding: 11px; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; font-size: 14px; margin-top: 4px; }
 
         /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
@@ -144,15 +163,72 @@
 </head>
 <body>
 
-    <!-- LOGIN MODAL -->
-    <div class="modal" id="login-modal">
+    <!-- AUTHENTICATION (LOGIN & SIGN UP) MODAL -->
+    <div class="modal" id="auth-modal">
         <div class="modal-box">
-            <h2>Welcome to PraveenChat</h2>
-            <p>Real-Time Chat Application running live on GitHub Pages!</p>
-            <form id="login-form">
-                <input type="text" id="username-input" placeholder="Enter your display name..." required autofocus maxlength="20">
-                <button type="submit" class="btn-block">Join Chatroom</button>
-            </form>
+            <div class="modal-header">
+                <h2>PraveenChat</h2>
+                <p>Real-Time Cloud Messenger on GitHub Pages</p>
+            </div>
+
+            <!-- Segmented Tabs: Sign In / Create Account -->
+            <div class="auth-tabs">
+                <button type="button" class="auth-tab active" id="tab-login">Log In</button>
+                <button type="button" class="auth-tab" id="tab-signup">Create Account</button>
+            </div>
+
+            <div class="auth-notice" id="auth-notice"></div>
+
+            <!-- LOG IN FORM -->
+            <div class="auth-pane active" id="pane-login">
+                <form id="form-login">
+                    <div class="form-group">
+                        <label for="login-username">Username</label>
+                        <input type="text" id="login-username" placeholder="e.g. praveen" required maxlength="25" autofocus>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" placeholder="Enter your password..." required>
+                    </div>
+                    <button type="submit" class="btn-block">Sign In</button>
+                    <button type="button" class="btn-auth-switch" id="switch-to-signup">Don't have an account? Create one</button>
+                </form>
+            </div>
+
+            <!-- SIGN UP / CREATE ACCOUNT FORM -->
+            <div class="auth-pane" id="pane-signup">
+                <form id="form-signup">
+                    <div class="form-group">
+                        <label for="signup-username">Desired Username</label>
+                        <input type="text" id="signup-username" placeholder="e.g. alex" required minlength="3" maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-email">Email (Optional)</label>
+                        <input type="email" id="signup-email" placeholder="name@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-password">Password</label>
+                        <input type="password" id="signup-password" placeholder="Min. 4 characters" required minlength="4">
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-confirm">Confirm Password</label>
+                        <input type="password" id="signup-confirm" placeholder="Re-enter password" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Avatar Color</label>
+                        <div class="color-palette" id="color-palette">
+                            <span class="color-dot active" data-color="#3b82f6" style="background:#3b82f6;"></span>
+                            <span class="color-dot" data-color="#10b981" style="background:#10b981;"></span>
+                            <span class="color-dot" data-color="#8b5cf6" style="background:#8b5cf6;"></span>
+                            <span class="color-dot" data-color="#ec4899" style="background:#ec4899;"></span>
+                            <span class="color-dot" data-color="#f59e0b" style="background:#f59e0b;"></span>
+                            <span class="color-dot" data-color="#06b6d4" style="background:#06b6d4;"></span>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-block">Create Account</button>
+                    <button type="button" class="btn-auth-switch" id="switch-to-login">Already have an account? Sign In</button>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -176,6 +252,7 @@
                     <span class="user-name" id="my-name">Guest</span>
                     <span class="user-status"><span class="status-dot-mini"></span> Online</span>
                 </div>
+                <button type="button" class="btn-logout" id="logout-btn" title="Sign Out / Switch Account">🚪</button>
             </div>
 
             <div class="sidebar-scrollable">
@@ -265,9 +342,25 @@
 
             // DOM elements
             const DOM = {
-                loginModal: document.getElementById('login-modal'),
-                loginForm: document.getElementById('login-form'),
-                usernameInput: document.getElementById('username-input'),
+                authModal: document.getElementById('auth-modal'),
+                tabLogin: document.getElementById('tab-login'),
+                tabSignup: document.getElementById('tab-signup'),
+                paneLogin: document.getElementById('pane-login'),
+                paneSignup: document.getElementById('pane-signup'),
+                formLogin: document.getElementById('form-login'),
+                formSignup: document.getElementById('form-signup'),
+                loginUsername: document.getElementById('login-username'),
+                loginPassword: document.getElementById('login-password'),
+                signupUsername: document.getElementById('signup-username'),
+                signupEmail: document.getElementById('signup-email'),
+                signupPassword: document.getElementById('signup-password'),
+                signupConfirm: document.getElementById('signup-confirm'),
+                colorPalette: document.getElementById('color-palette'),
+                authNotice: document.getElementById('auth-notice'),
+                switchToSignup: document.getElementById('switch-to-signup'),
+                switchToLogin: document.getElementById('switch-to-login'),
+                logoutBtn: document.getElementById('logout-btn'),
+
                 myAvatar: document.getElementById('my-avatar'),
                 myName: document.getElementById('my-name'),
                 channelList: document.getElementById('channel-list'),
@@ -315,19 +408,185 @@
                 document.documentElement.setAttribute('data-theme', next);
             });
 
-            // Login
-            DOM.loginForm.addEventListener('submit', (e) => {
+            // ============================================================
+            // ACCOUNT DATABASE & AUTHENTICATION ENGINE
+            // ============================================================
+            const DB_KEY = 'praveenchat_accounts_v1';
+            let selectedColor = '#3b82f6';
+
+            function getAccounts() {
+                try {
+                    const data = localStorage.getItem(DB_KEY);
+                    return data ? JSON.parse(data) : {};
+                } catch(e) { return {}; }
+            }
+
+            function saveAccount(acc) {
+                const db = getAccounts();
+                db[acc.username.toLowerCase()] = acc;
+                localStorage.setItem(DB_KEY, JSON.stringify(db));
+            }
+
+            // Seed default account if database is new
+            (function initSeed() {
+                const db = getAccounts();
+                if (!db['praveen']) {
+                    saveAccount({
+                        id: 'u_praveen',
+                        username: 'praveen',
+                        email: 'praveen@example.com',
+                        password: '123',
+                        color: '#3b82f6',
+                        joinedAt: Date.now()
+                    });
+                }
+            })();
+
+            function showNotice(msg, type) {
+                DOM.authNotice.textContent = msg;
+                DOM.authNotice.className = `auth-notice ${type}`;
+            }
+
+            function clearNotice() {
+                DOM.authNotice.style.display = 'none';
+                DOM.authNotice.className = 'auth-notice';
+                DOM.authNotice.textContent = '';
+            }
+
+            // Tab Switching
+            function setAuthTab(tab) {
+                clearNotice();
+                if (tab === 'login') {
+                    DOM.tabLogin.classList.add('active');
+                    DOM.tabSignup.classList.remove('active');
+                    DOM.paneLogin.classList.add('active');
+                    DOM.paneSignup.classList.remove('active');
+                    DOM.loginUsername.focus();
+                } else {
+                    DOM.tabSignup.classList.add('active');
+                    DOM.tabLogin.classList.remove('active');
+                    DOM.paneSignup.classList.add('active');
+                    DOM.paneLogin.classList.remove('active');
+                    DOM.signupUsername.focus();
+                }
+            }
+
+            DOM.tabLogin.addEventListener('click', () => setAuthTab('login'));
+            DOM.tabSignup.addEventListener('click', () => setAuthTab('signup'));
+            DOM.switchToSignup.addEventListener('click', () => setAuthTab('signup'));
+            DOM.switchToLogin.addEventListener('click', () => setAuthTab('login'));
+
+            // Color Picker Selection
+            DOM.colorPalette.addEventListener('click', (e) => {
+                if (e.target.classList.contains('color-dot')) {
+                    DOM.colorPalette.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+                    e.target.classList.add('active');
+                    selectedColor = e.target.getAttribute('data-color') || '#3b82f6';
+                }
+            });
+
+            // Sign Up Form Handler
+            DOM.formSignup.addEventListener('submit', (e) => {
                 e.preventDefault();
-                const name = DOM.usernameInput.value.trim();
-                if (!name) return;
-                const uid = 'u_' + Math.random().toString(36).substr(2, 6);
-                STATE.user = { id: uid, name: name };
-                DOM.myName.textContent = name;
-                DOM.myAvatar.textContent = name[0].toUpperCase();
-                DOM.loginModal.classList.add('hidden');
+                const username = DOM.signupUsername.value.trim();
+                const email = DOM.signupEmail.value.trim();
+                const password = DOM.signupPassword.value;
+                const confirm = DOM.signupConfirm.value;
+
+                if (username.length < 3) {
+                    showNotice('Username must be at least 3 characters long.', 'error');
+                    return;
+                }
+
+                const db = getAccounts();
+                if (db[username.toLowerCase()]) {
+                    showNotice('Username already exists! Please choose another or Log In.', 'error');
+                    return;
+                }
+
+                if (password.length < 3) {
+                    showNotice('Password must be at least 3 characters long.', 'error');
+                    return;
+                }
+
+                if (password !== confirm) {
+                    showNotice('Passwords do not match. Please verify.', 'error');
+                    return;
+                }
+
+                const newAccount = {
+                    id: 'u_' + Math.random().toString(36).substring(2, 8),
+                    username: username,
+                    email: email,
+                    password: password,
+                    color: selectedColor,
+                    joinedAt: Date.now()
+                };
+
+                saveAccount(newAccount);
+                showNotice('Account created successfully! Logging you in...', 'success');
+
+                setTimeout(() => {
+                    completeLogin(newAccount);
+                }, 500);
+            });
+
+            // Log In Form Handler
+            DOM.formLogin.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = DOM.loginUsername.value.trim();
+                const password = DOM.loginPassword.value;
+
+                const db = getAccounts();
+                const account = db[username.toLowerCase()];
+
+                if (!account) {
+                    showNotice(`No account found for "${username}". Click "Create Account" above.`, 'error');
+                    return;
+                }
+
+                if (account.password !== password) {
+                    showNotice('Invalid password! Please try again.', 'error');
+                    return;
+                }
+
+                completeLogin(account);
+            });
+
+            function completeLogin(account) {
+                STATE.user = { id: account.id, name: account.username, color: account.color || '#3b82f6' };
+                sessionStorage.setItem('praveenchat_session', JSON.stringify(STATE.user));
+
+                DOM.myName.textContent = account.username;
+                DOM.myAvatar.textContent = account.username[0].toUpperCase();
+                DOM.myAvatar.style.backgroundColor = account.color || '#3b82f6';
+                DOM.authModal.classList.add('hidden');
+
                 initNetworking();
                 DOM.msgInput.focus();
+            }
+
+            // Log Out / Switch User Handler
+            DOM.logoutBtn.addEventListener('click', () => {
+                if (confirm('Sign out of PraveenChat?')) {
+                    sessionStorage.removeItem('praveenchat_session');
+                    broadcast({ type: 'presence_leave', user: STATE.user });
+                    location.reload();
+                }
             });
+
+            // Check if existing session active
+            const savedSession = sessionStorage.getItem('praveenchat_session');
+            if (savedSession) {
+                try {
+                    const user = JSON.parse(savedSession);
+                    completeLogin(user);
+                } catch(e) {
+                    DOM.authModal.classList.remove('hidden');
+                }
+            } else {
+                DOM.authModal.classList.remove('hidden');
+            }
 
             // Networking: MQTT Cloud WebSocket Broker + BroadcastChannel Hybrid
             function initNetworking() {
