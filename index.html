@@ -181,7 +181,7 @@
 
             <!-- LOG IN FORM -->
             <div class="auth-pane active" id="pane-login">
-                <form id="form-login">
+                <form id="form-login" novalidate onsubmit="return false;">
                     <div class="form-group">
                         <label for="login-username">Username</label>
                         <input type="text" id="login-username" placeholder="e.g. praveen" required maxlength="25" autofocus>
@@ -190,17 +190,17 @@
                         <label for="login-password">Password</label>
                         <input type="password" id="login-password" placeholder="Enter your password..." required>
                     </div>
-                    <button type="submit" class="btn-block">Sign In</button>
+                    <button type="button" id="btn-submit-login" class="btn-block">Sign In</button>
                     <button type="button" class="btn-auth-switch" id="switch-to-signup">Don't have an account? Create one</button>
                 </form>
             </div>
 
             <!-- SIGN UP / CREATE ACCOUNT FORM -->
             <div class="auth-pane" id="pane-signup">
-                <form id="form-signup">
+                <form id="form-signup" novalidate onsubmit="return false;">
                     <div class="form-group">
                         <label for="signup-username">Desired Username</label>
-                        <input type="text" id="signup-username" placeholder="e.g. alex" required minlength="3" maxlength="20">
+                        <input type="text" id="signup-username" placeholder="e.g. alex" required minlength="2" maxlength="20">
                     </div>
                     <div class="form-group">
                         <label for="signup-email">Email (Optional)</label>
@@ -208,7 +208,7 @@
                     </div>
                     <div class="form-group">
                         <label for="signup-password">Password</label>
-                        <input type="password" id="signup-password" placeholder="Min. 4 characters" required minlength="4">
+                        <input type="password" id="signup-password" placeholder="Min. 3 characters" required minlength="3">
                     </div>
                     <div class="form-group">
                         <label for="signup-confirm">Confirm Password</label>
@@ -225,7 +225,7 @@
                             <span class="color-dot" data-color="#06b6d4" style="background:#06b6d4;"></span>
                         </div>
                     </div>
-                    <button type="submit" class="btn-block">Create Account</button>
+                    <button type="button" id="btn-submit-signup" class="btn-block">Create Account</button>
                     <button type="button" class="btn-auth-switch" id="switch-to-login">Already have an account? Sign In</button>
                 </form>
             </div>
@@ -359,6 +359,8 @@
                 authNotice: document.getElementById('auth-notice'),
                 switchToSignup: document.getElementById('switch-to-signup'),
                 switchToLogin: document.getElementById('switch-to-login'),
+                btnSubmitSignup: document.getElementById('btn-submit-signup'),
+                btnSubmitLogin: document.getElementById('btn-submit-login'),
                 logoutBtn: document.getElementById('logout-btn'),
 
                 myAvatar: document.getElementById('my-avatar'),
@@ -480,35 +482,42 @@
                 }
             });
 
-            // Sign Up Form Handler
-            DOM.formSignup.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const username = DOM.signupUsername.value.trim();
-                const email = DOM.signupEmail.value.trim();
-                const password = DOM.signupPassword.value;
-                const confirm = DOM.signupConfirm.value;
+            // ============================================================
+            // SIGN UP / ACCOUNT CREATION HANDLER
+            // ============================================================
+            function handleSignup() {
+                const username = (DOM.signupUsername.value || '').trim();
+                const email = (DOM.signupEmail.value || '').trim();
+                const password = DOM.signupPassword.value || '';
+                const confirm = DOM.signupConfirm.value || '';
 
-                if (username.length < 2) {
+                if (!username || username.length < 2) {
+                    alert('⚠️ Please enter a username with at least 2 characters.');
                     showNotice('Username must be at least 2 characters long.', 'error');
+                    DOM.signupUsername.focus();
                     return;
                 }
 
                 const db = getAccounts();
                 if (db[username.toLowerCase()]) {
+                    alert(`⚠️ The Username/ID "${username}" is already taken!\n\nPlease enter another username or switch to Log In.`);
                     showNotice(`⚠️ Username "${username}" is already taken! Please choose another ID.`, 'error');
-                    alert(`⚠️ The Username/ID "${username}" is already taken!\n\nPlease enter another username to create your account.`);
                     DOM.signupUsername.value = '';
                     DOM.signupUsername.focus();
                     return;
                 }
 
-                if (password.length < 3) {
+                if (!password || password.length < 3) {
+                    alert('⚠️ Password must be at least 3 characters long.');
                     showNotice('Password must be at least 3 characters long.', 'error');
+                    DOM.signupPassword.focus();
                     return;
                 }
 
                 if (password !== confirm) {
+                    alert('❌ Passwords do not match! Please re-enter.');
                     showNotice('Passwords do not match. Please verify.', 'error');
+                    DOM.signupConfirm.focus();
                     return;
                 }
 
@@ -522,37 +531,84 @@
                 };
 
                 saveAccount(newAccount);
-                showNotice('Account created successfully! Logging you in...', 'success');
+                alert(`✅ Account "${username}" created successfully!\n\nEntering chatroom now...`);
+                completeLogin(newAccount);
+            }
 
-                setTimeout(() => {
-                    completeLogin(newAccount);
-                }, 350);
+            // Bind Sign Up to button click, form submit, and Enter key
+            if (DOM.btnSubmitSignup) {
+                DOM.btnSubmitSignup.addEventListener('click', handleSignup);
+            }
+            if (DOM.formSignup) {
+                DOM.formSignup.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    handleSignup();
+                });
+            }
+            [DOM.signupUsername, DOM.signupPassword, DOM.signupConfirm].forEach(input => {
+                if (input) {
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleSignup();
+                        }
+                    });
+                }
             });
 
-            // Log In Form Handler
-            DOM.formLogin.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const username = DOM.loginUsername.value.trim();
-                const password = DOM.loginPassword.value;
+            // ============================================================
+            // LOG IN HANDLER
+            // ============================================================
+            function handleLogin() {
+                const username = (DOM.loginUsername.value || '').trim();
+                const password = DOM.loginPassword.value || '';
+
+                if (!username) {
+                    alert('⚠️ Please enter your username.');
+                    DOM.loginUsername.focus();
+                    return;
+                }
 
                 const db = getAccounts();
                 const account = db[username.toLowerCase()];
 
                 if (!account) {
+                    alert(`❌ Account "${username}" does not exist!\n\nPlease switch to the "Create Account" tab to register first.`);
                     showNotice(`No account found for "${username}". Click "Create Account" above.`, 'error');
-                    alert(`❌ Account "${username}" does not exist!\n\nPlease click "Create Account" to register first.`);
                     return;
                 }
 
                 if (account.password !== password) {
+                    alert(`❌ Incorrect password for "${username}"!\n\nPlease check your password and try again.`);
                     showNotice('Invalid password! Please try again.', 'error');
-                    alert(`❌ Incorrect password for "${username}"!\n\nPlease re-enter your password.`);
                     DOM.loginPassword.value = '';
                     DOM.loginPassword.focus();
                     return;
                 }
 
+                alert(`✅ Welcome back, ${account.username}!`);
                 completeLogin(account);
+            }
+
+            // Bind Log In to button click, form submit, and Enter key
+            if (DOM.btnSubmitLogin) {
+                DOM.btnSubmitLogin.addEventListener('click', handleLogin);
+            }
+            if (DOM.formLogin) {
+                DOM.formLogin.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    handleLogin();
+                });
+            }
+            [DOM.loginUsername, DOM.loginPassword].forEach(input => {
+                if (input) {
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleLogin();
+                        }
+                    });
+                }
             });
 
             function completeLogin(account) {
