@@ -495,8 +495,10 @@
 
                 const db = getAccounts();
                 if (db[username.toLowerCase()]) {
-                    showNotice(`Account "${username}" already exists! Switch to Log In tab to sign in.`, 'error');
-                    DOM.loginUsername.value = username;
+                    showNotice(`⚠️ Username "${username}" is already taken! Please choose another ID.`, 'error');
+                    alert(`⚠️ The Username/ID "${username}" is already taken!\n\nPlease enter another username to create your account.`);
+                    DOM.signupUsername.value = '';
+                    DOM.signupUsername.focus();
                     return;
                 }
 
@@ -538,11 +540,15 @@
 
                 if (!account) {
                     showNotice(`No account found for "${username}". Click "Create Account" above.`, 'error');
+                    alert(`❌ Account "${username}" does not exist!\n\nPlease click "Create Account" to register first.`);
                     return;
                 }
 
                 if (account.password !== password) {
                     showNotice('Invalid password! Please try again.', 'error');
+                    alert(`❌ Incorrect password for "${username}"!\n\nPlease re-enter your password.`);
+                    DOM.loginPassword.value = '';
+                    DOM.loginPassword.focus();
                     return;
                 }
 
