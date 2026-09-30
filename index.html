@@ -427,24 +427,19 @@
                 localStorage.setItem(DB_KEY, JSON.stringify(db));
             }
 
-            // Seed default account if database is new
-            (function initSeed() {
+            // Clear any old hardcoded seed so user can freely register their own account
+            (function cleanupOldSeed() {
                 const db = getAccounts();
-                if (!db['praveen']) {
-                    saveAccount({
-                        id: 'u_praveen',
-                        username: 'praveen',
-                        email: 'praveen@example.com',
-                        password: '123',
-                        color: '#3b82f6',
-                        joinedAt: Date.now()
-                    });
+                if (db['praveen'] && db['praveen'].password === '123' && db['praveen'].email === 'praveen@example.com') {
+                    delete db['praveen'];
+                    localStorage.setItem(DB_KEY, JSON.stringify(db));
                 }
             })();
 
             function showNotice(msg, type) {
                 DOM.authNotice.textContent = msg;
                 DOM.authNotice.className = `auth-notice ${type}`;
+                DOM.authNotice.style.display = 'block';
             }
 
             function clearNotice() {
@@ -493,14 +488,15 @@
                 const password = DOM.signupPassword.value;
                 const confirm = DOM.signupConfirm.value;
 
-                if (username.length < 3) {
-                    showNotice('Username must be at least 3 characters long.', 'error');
+                if (username.length < 2) {
+                    showNotice('Username must be at least 2 characters long.', 'error');
                     return;
                 }
 
                 const db = getAccounts();
                 if (db[username.toLowerCase()]) {
-                    showNotice('Username already exists! Please choose another or Log In.', 'error');
+                    showNotice(`Account "${username}" already exists! Switch to Log In tab to sign in.`, 'error');
+                    DOM.loginUsername.value = username;
                     return;
                 }
 
@@ -528,7 +524,7 @@
 
                 setTimeout(() => {
                     completeLogin(newAccount);
-                }, 500);
+                }, 350);
             });
 
             // Log In Form Handler
